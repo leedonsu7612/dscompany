@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ds.sap.mapper.UserMapper">
+
+    <!--회원가입 처리-->
+    <insert id="register">
+        INSERT INTO tbl_user (
+              uid
+            , upw
+            , uname
+            , uemail
+        ) VALUES (
+            #{uid}
+            , #{upw}
+            , #{uname}
+            , #{uemail}
+        )
+    </insert>
+
+    <!--회원 정보 수정-->
+    <update id="updateUser">
+        UPDATE tbl_user
+        SET
+            uname = #{uname}
+            , uemail =  #{uemail}
+        WHERE uid = #{uid}
+    </update>
+
+    <!--회원 비밀번호-->
+    <select id="getUser" resultType="UserVO">
+        SELECT *
+        FROM tbl_user
+        WHERE uid = #{uid}
+    </select>
+
+    <!--회원비밀번호 수정-->
+    <update id="updatePw">
+        UPDATE tbl_user
+        SET
+            upw = #{upw}
+        WHERE uid = #{uid}
+    </update>
+
+    <!--회원 프로필 이미지 변경-->
+    <update id="updateUimage">
+        UPDATE tbl_user
+        SET
+            uimage = #{uimage}
+        WHERE uid = #{uid}
+    </update>
+
+    <!--로그인 처리-->
+    <select id="login" resultType="UserVO">
+        SELECT *
+        FROM tbl_user
+        WHERE
+            uid = #{uid}
+    </select>
+
+    <!--로그인 일자 갱신-->
+    <update id="updateLoginDate">
+        UPDATE tbl_user
+        SET logdate = NOW()
+        WHERE uid = #{uid}
+    </update>
+
+    <!--로그인 유지-->
+    <update id="keepLogin">
+        UPDATE tbl_user
+        SET
+            sessionkey     = #{sessionId}
+            , sessionlimit = #{next}
+        WHERE uid = #{uid}
+    </update>
+
+    <!--Session Key 확인-->
+    <select id="checkUserWithSessionKey" resultType="UserVO">
+        SELECT *
+        FROM tbl_user
+        WHERE sessionkey = #{value}
+              AND sessionlimit > NOW()
+    </select>
+
+</mapper>

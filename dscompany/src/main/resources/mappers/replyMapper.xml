@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ds.sap.mapper.ReplyMapper">
+
+    <!--댓글 목록-->
+    <select id="list" resultMap="replyVOResultMap">
+        SELECT
+            r.rno
+            , r.bno
+            , r.replytext
+            , r.replyer
+            , r.regdate
+            , r.updatedate
+            , u.uimage
+        FROM tbl_reply r
+            LEFT OUTER JOIN tbl_user u
+                ON u.uid = r.replyer
+        WHERE bno = #{bno}
+        ORDER BY rno DESC
+    </select>
+    
+
+    <!--댓글 목록 + 페이징-->
+    <select id="listPaging" resultMap="replyVOResultMap">
+        SELECT
+            r.rno
+            , r.bno
+            , r.replytext
+            , r.replyer
+            , r.regdate
+            , r.updatedate
+            , u.uimage
+            , (SELECT COUNT(rlno) FROM tbl_reply_likes WHERE rno = r.rno) as rlnocount
+        FROM tbl_reply r
+            LEFT OUTER JOIN tbl_user u
+                ON u.uid = r.replyer
+        WHERE bno = #{bno}
+        ORDER BY rno DESC
+        LIMIT #{criteria.pageStart}, #{criteria.perPageNum}
+    </select>
+
+    <!--특정 게시글의 댓글 갯수-->
+    <select id="count" resultType="int">
+        SELECT COUNT(bno)
+        FROM tbl_reply
+        WHERE bno = #{bno}
+    </select>
+
+    <!--댓글 입력-->
+    <insert id="create">
+        INSERT INTO tbl_reply (
+            bno
+            , replytext
+            , replyer
+        ) VALUES (
+            #{bno}
+            , #{replytext}
+            , #{replyer}
+        )
+    </insert>
+
+    <!--댓글 수정-->
+    <delete id="update">
+        UPDATE tbl_reply
+        SET
+            replytext    = #{replytext}
+            , updatedate = NOW()
+        WHERE rno = #{rno}
+    </delete>
+
+    <!--댓글 삭제-->
+    <delete id="delete">
+        DELETE FROM tbl_reply
+        WHERE rno = #{rno}
+    </delete>
+
+    <!--특정 댓글의 게시글 번호-->
+    <select id="getBno" resultType="int">
+        SELECT
+        bno
+        FROM tbl_reply
+        WHERE rno = #{rno}
+    </select>
+
+    <!--회원이 작성한 댓글 목록-->
+    <select id="userReplies" resultMap="replyVOResultMap">
+        SELECT
+            r.replytext
+            , r.regdate
+            , b.title
+            , b.bno
+        FROM tbl_reply r
+            LEFT OUTER JOIN tbl_board b
+                ON b.bno = r.bno
+        WHERE replyer = #{uid}
+    </select>
+
+    <resultMap id="replyVOResultMap" type="ReplyVO">
+        <id property="rno" column="rno"/>
+        <result property="bno" column="bno"/>
+        <result property="replytext" column="replytext"/>
+        <result property="replyer" column="replyer"/>
+        <result property="regdate" column="regdate"/>
+        <result property="updatedate" column="updatedate"/>
+        <result property="rlnocount" column="rlnocount"/>
+        <association property="userVO" resultMap="userVOResultMap"/>
+        <association property="boardVO" resultMap="boardVOResultMap"/>
+    </resultMap>
+
+    <resultMap id="boardVOResultMap" type="BoardVO">
+        <id property="bno" column="bno"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="writer" column="writer"/>
+        <result property="regdate" column="regdate"/>
+        <result property="viewcnt" column="viewcnt"/>
+        <result property="replycnt" column="replycnt"/>
+        <result property="attachcnt" column="attachcnt"/>
+        <association property="userVO" resultMap="userVOResultMap"/>
+    </resultMap>
+
+    <resultMap id="userVOResultMap" type="UserVO">
+        <id property="uid" column="uid"/>
+        <result property="upw" column="upw"/>
+        <result property="uname" column="uname"/>
+        <result property="upoint" column="upoint"/>
+        <result property="sessionkey" column="sessionkey"/>
+        <result property="sessionlimit" column="sessionlimit"/>
+        <result property="uemail" column="uemail"/>
+        <result property="regdate" column="regdate"/>
+        <result property="logdate" column="logdate"/>
+        <result property="uimage" column="uimage"/>
+    </resultMap>
+    
+</mapper>

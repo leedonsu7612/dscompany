@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ds.sap.mapper.BoardMapper">
+
+    <!--================================================================================================================-->
+
+                                                <!--게시글 기본 CRUD SQL-->
+
+    <!--================================================================================================================-->
+
+    <!--게시글 입력-->
+    <insert id="create" useGeneratedKeys="true" keyProperty="bno">
+        INSERT INTO tbl_board (
+            title
+            , content
+            , writer
+            , attachcnt
+        ) VALUES (
+            #{title}
+            , #{content}
+            , #{writer}
+            , #{attachcnt}
+        )
+    </insert>
+
+    <!--게시글 조회-->
+    <select id="read" resultMap="boardVOResultMap">
+        SELECT
+            b.bno
+            , b.title
+            , b.content
+            , b.writer
+            , b.regdate
+            , b.viewcnt
+            , b.replycnt
+            , b.attachcnt
+            , u.uimage
+        FROM tbl_board b
+            LEFT OUTER JOIN tbl_user u
+                ON u.uid = b.writer
+        WHERE bno = #{bno}
+    </select>
+
+    <!--게시글 조회수 증가-->
+    <update id="updateViewCnt">
+        UPDATE tbl_board
+        SET viewcnt = viewcnt + 1
+        WHERE bno = #{bno}
+    </update>
+
+    <!--게시글 수정-->
+    <update id="update">
+        UPDATE tbl_board
+        SET
+            title = #{title}
+            , content = #{content}
+            , attachcnt = #{attachcnt}
+        WHERE bno = #{bno}
+    </update>
+
+    <!--게시글 삭제-->
+    <delete id="delete">
+        DELETE FROM tbl_board
+        WHERE bno = #{bno}
+    </delete>
+
+    <!--게시글 목록-->
+    <select id="list" resultType="BoardVO">
+        <![CDATA[
+        SELECT
+            bno
+            , title
+            , content
+            , writer
+            , regdate
+            , viewcnt
+            , replycnt
+            , attachcnt
+        FROM tbl_board
+        WHERE bno > 0
+        ORDER BY bno DESC, regdate DESC
+        ]]>
+    </select>
+
+    <!--게시글 목록 + 페이징-->
+    <select id="pagingList" resultType="BoardVO">
+        <![CDATA[
+        SELECT
+            bno
+            , title
+            , content
+            , writer
+            , regdate
+            , viewcnt
+            , replycnt
+            , attachcnt
+        FROM tbl_board
+        WHERE bno > 0
+        ORDER BY bno DESC, regdate DESC
+        LIMIT #{pageStart}, #{perPageNum}
+        ]]>
+    </select>
+
+    <!--게시글 전체 갯수-->
+    <select id="countList" resultType="int">
+        <![CDATA[
+        SELECT COUNT(bno)
+        FROM tbl_board
+        WHERE bno > 0
+        ]]>
+    </select>
+
+    <!--게시글 목록 + 페이징 + 검색-->
+    <select id="pagingSearchedList" resultType="BoardVO">
+        <![CDATA[
+        SELECT
+            bno
+            , title
+            , content
+            , writer
+            , regdate
+            , viewcnt
+            , replycnt
+            , attachcnt
+        FROM tbl_board
+        WHERE bno > 0
+        ]]>
+        <include refid="search"/>
+        <![CDATA[
+        ORDER BY bno DESC, regdate DESC
+        LIMIT #{pageStart}, #{perPageNum}
+        ]]>
+    </select>
+
+    <!--게시글 전체 갯수 or 검색된 게시글 갯수-->
+    <select id="countSearchedList" resultType="int">
+        <![CDATA[
+        SELECT COUNT(bno)
+        FROM tbl_board
+        WHERE bno > 0
+        ]]>
+        <include refid="search"/>
+    </select>
+
+    <!--검색처리를 위한 동적 SQL-->
+    <sql id="search">
+        <if test="searchType != null">
+            <if test="searchType == 't'.toString()">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'c'.toString()">
+                AND content LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'w'.toString()">
+                AND writer LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'tc'.toString()">
+                AND (
+                title LIKE CONCAT('%', #{keyword}, '%')
+                OR content LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="searchType == 'cw'.toString()">
+                AND (
+                content LIKE CONCAT('%', #{keyword}, '%')
+                OR writer LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="searchType == 'tcw'.toString()">
+                AND (
+                title LIKE CONCAT('%', #{keyword}, '%')
+                OR content LIKE CONCAT('%', #{keyword}, '%')
+                OR writer LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </if>
+    </sql>
+
+    <!--게시글 댓글 갯수 갱신-->
+    <update id="updateReplyCnt">
+        UPDATE tbl_board
+        SET
+            replycnt = replycnt + #{amount}
+        WHERE bno = #{bno}
+    </update>
+
+    <!--회원이 작성한 게시글 목록-->
+    <select id="userBoardList" resultType="BoardVO">
+        SELECT
+            *
+        FROM tbl_board
+        WHERE writer = #{uid}
+        ORDER BY bno DESC, regdate DESC
+    </select>
+
+    <resultMap id="boardVOResultMap" type="BoardVO">
+        <id property="bno" column="bno"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="writer" column="writer"/>
+        <result property="regdate" column="regdate"/>
+        <result property="viewcnt" column="viewcnt"/>
+        <result property="replycnt" column="replycnt"/>
+        <result property="attachcnt" column="attachcnt"/>
+        <association property="userVO" resultMap="userVOResultMap"/>
+    </resultMap>
+
+    <resultMap id="userVOResultMap" type="UserVO">
+        <id property="uid" column="uid"/>
+        <result property="upw" column="upw"/>
+        <result property="uname" column="uname"/>
+        <result property="upoint" column="upoint"/>
+        <result property="sessionkey" column="sessionkey"/>
+        <result property="sessionlimit" column="sessionlimit"/>
+        <result property="uemail" column="uemail"/>
+        <result property="regdate" column="regdate"/>
+        <result property="logdate" column="logdate"/>
+        <result property="uimage" column="uimage"/>
+    </resultMap>
+
+</mapper>

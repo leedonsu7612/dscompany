@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ds.sap.mapper.BookmarkMapper">
+
+    <!--북마크 등록-->
+    <insert id="create">
+        INSERT tbl_bookmark (
+            bno
+            , uid
+        ) VALUES (
+            #{bno}
+            , #{uid}
+        )
+    </insert>
+
+    <!--북마크 목록-->
+    <select id="list" resultMap="bookmarkVOResultMap">
+        SELECT
+            bm.bmno
+            , bm.bno
+            , bm.uid
+            , b.title
+            , b.writer
+        FROM tbl_bookmark bm
+            LEFT OUTER JOIN tbl_board b
+                ON b.bno = bm.bno
+        WHERE uid = #{uid}
+        ORDER BY bm.regdate desc
+    </select>
+
+    <!--북마크 확인-->
+    <select id="checkBookmark" resultType="boolean">
+        SELECT
+            COUNT(bmno)
+        FROM tbl_bookmark
+        WHERE uid = #{uid}
+              AND bno = #{bno}
+    </select>
+
+    <!--북마크 삭제-->
+    <delete id="delete">
+        DELETE FROM tbl_bookmark
+        WHERE bno = #{bno}
+              AND uid = #{uid}
+    </delete>
+
+    <resultMap id="bookmarkVOResultMap" type="BookmarkVO">
+        <id property="bmno" column="bmno"/>
+        <result property="bno" column="bno"/>
+        <result property="uid" column="uid"/>
+        <result property="regdate" column="regdate"/>
+        <association property="boardVO" resultMap="boardVOResultMap"/>
+    </resultMap>
+
+    <resultMap id="boardVOResultMap" type="BoardVO">
+        <id property="bno" column="bno"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="writer" column="writer"/>
+        <result property="regdate" column="regdate"/>
+        <result property="viewcnt" column="viewcnt"/>
+        <result property="replycnt" column="replycnt"/>
+        <result property="attachcnt" column="attachcnt"/>
+    </resultMap>
+</mapper>
