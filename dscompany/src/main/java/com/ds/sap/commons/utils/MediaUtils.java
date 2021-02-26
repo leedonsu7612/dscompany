@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MediaUtils {
+	
 
     private static Map<String, MediaType> mediaMap;
 
